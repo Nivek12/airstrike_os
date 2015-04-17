@@ -15,7 +15,7 @@
 #define _HTTP_DEBUG_H_
 
 #include "HttpConfig.h"
-
+#include "stdio.h"
 /**
  * @defgroup HttpDebug Debugging routines
  * This module implements debug routines which enable debug traces to be sent to a logger
@@ -34,6 +34,9 @@
 #else
 #define HttpDebug(x, ...)
 #endif
+
+#define MyHttpDebug(x,...)  printf("%s:%d: \n" x, __FILE__, __LINE__, __VA_ARGS__);
+
 /**
  * Send string debug trace to logger
  * @param pString The string to send

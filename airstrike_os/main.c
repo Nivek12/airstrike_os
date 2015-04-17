@@ -25,6 +25,7 @@
 #include "osi.h"
 
 #include "udma_if.h"
+#include "pwm.h"
 #include "network.h"
 
 //*****************************************************************************
@@ -41,7 +42,7 @@ extern uVectorEntry __vector_table;
 //                          LOCAL DEFINES
 //*****************************************************************************
 #define APP_NAME		        "WebSocket"
-#define SPAWN_TASK_PRIORITY     2
+#define SPAWN_TASK_PRIORITY     3
 #define HTTP_SERVER_APP_TASK_PRIORITY  2
 #define TARGET_TASK_PRIORITY  1
 #define OSI_STACK_SIZE          2048
@@ -136,7 +137,7 @@ void TargetTask(void * param)
 {
 	while(1)
 	{
-		printf("target\n");
+		//printf("target\n");
 		osi_Sleep(10);
 	}
 }
@@ -163,6 +164,8 @@ int main(void) {
 
 	//Config pins
 	PinMuxConfig();
+
+	InitPWMModules();
 
 	VStartSimpleLinkSpawnTask(SPAWN_TASK_PRIORITY);
 

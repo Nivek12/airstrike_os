@@ -603,7 +603,6 @@ static int HttpCore_HandleRequestPacket(UINT16 uConnection, struct HttpBlob pack
 
             if(result > 0)
             	HttpDebug("line: %.*s \n\r", line.uLength, line.pData);
-
             // Method line is too long, or some other error
             if (result < 0)
                 return 0;
@@ -825,6 +824,22 @@ static int HttpCore_HandleHeaderLine(UINT16 uConnection, struct HttpBlob line)
         	return 0;
     	}
 	//}
+
+	//Sec-WebSocket-Version check because firefox sends this header before the key
+	if(HttpString_nextToken(WS_VERSION_REQUEST, sizeof(WS_VERSION_REQUEST)-1, line) == line.pData)
+	{
+        line.pData += sizeof(WS_VERSION_REQUEST) + 1;
+        line.uLength -= sizeof(WS_VERSION_REQUEST) + 1;
+        pFound = HttpString_nextToken(WS_VERSION, sizeof(WS_VERSION)-1, line);
+
+        if (pFound != NULL)
+        {
+        	g_state.connections[uConnection].connectionState = WebSocketRequest;
+            return 1;
+        }
+        else
+        	return 0;
+	}
 	
     // If "Accept-encoding" header then set or clear HTTP_REQUEST_FLAG_ACCEPT_GZIP flag
     if (HttpString_nextToken(HTTP_ACCEPT_ENCODING, sizeof(HTTP_ACCEPT_ENCODING)-1, line) == line.pData)
@@ -897,13 +912,14 @@ static int HttpCore_HandleHeaderLine(UINT16 uConnection, struct HttpBlob line)
  */
 static int WSCore_HandshakeRequest(UINT16 uConnection,struct HttpBlob line)
 {	
+
 	UINT8* pFound;
     UINT8 bRetVal = 1;
 	static UINT16 Origin = 0;
 	char *dataCopy = (char *)malloc(strlen((const char *)line.pData));
 	memset(dataCopy,'\0',strlen((const char *)line.pData));
 	memcpy(dataCopy,(const char *)line.pData,strlen((const char *)line.pData));
-	
+
 	// NULL line is received when a header line is too long.
 	if (line.pData == NULL)
     {
@@ -952,6 +968,7 @@ static int WSCore_HandshakeRequest(UINT16 uConnection,struct HttpBlob line)
         memset(WS_KEY,'\0',WS_KEY_LENGTH+1);
         memcpy(WS_KEY,line.pData,WS_KEY_LENGTH);
         HttpDebug("key: %.*s \n\r", WS_KEY);
+
         if (WS_KEY != NULL)
         {                
             bRetVal = 1;
